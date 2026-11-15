@@ -83,7 +83,9 @@ installer asks it to close before replacing the executable.
 <img width="460" height="275" alt="image" src="https://github.com/user-attachments/assets/9e372abd-5966-4615-bf04-4fa34d7ffc8b" /><br>
 <img width="439" height="325" alt="image" src="https://github.com/user-attachments/assets/158d8d2b-2837-4b55-a2ac-a58ae9955745" /><br>
 <img width="916" height="717" alt="image" src="https://github.com/user-attachments/assets/4cc2b508-cfa0-4d72-9a36-781866d1bc57" /><br>
-<img width="1035" height="564" alt="image" src="https://github.com/user-attachments/assets/36681ee4-1f7e-4279-92c2-2c38a5161cab" /><br>
+- Add as many it needs to get you in shape... <br><br>
+<img width="1272" height="618" alt="image" src="https://github.com/user-attachments/assets/c786972e-12f5-4ab5-9273-00ef2c7e3889" /><br>
+
 - You can use it over VLC or any app-based video and control it.<br>
 <img width="257" height="41" alt="image" src="https://github.com/user-attachments/assets/50bc7206-1b43-4897-9542-0adde23c39c7" /> 
 
