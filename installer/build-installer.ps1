@@ -37,10 +37,15 @@ if (-not $wixVersion.StartsWith('4.')) {
 }
 
 $utilExtension = 'WixToolset.Util.wixext/4.0.5'
+$uiExtension = 'WixToolset.UI.wixext/4.0.5'
 $installedExtensions = & $wixPath extension list -g 2>$null
 if (-not ($installedExtensions -match 'WixToolset\.Util\.wixext 4\.0\.5')) {
     & $wixPath extension add -g $utilExtension
     if ($LASTEXITCODE -ne 0) { throw "Could not install the WiX Util extension ($LASTEXITCODE)" }
+}
+if (-not ($installedExtensions -match 'WixToolset\.UI\.wixext 4\.0\.5')) {
+    & $wixPath extension add -g $uiExtension
+    if ($LASTEXITCODE -ne 0) { throw "Could not install the WiX UI extension ($LASTEXITCODE)" }
 }
 
 if (-not $SkipPublish) {
@@ -73,6 +78,7 @@ try {
     & $wixPath build 'FloatView.wxs' `
         -arch x64 `
         -ext $utilExtension `
+        -ext $uiExtension `
         -d "ProductVersion=$msiVersion" `
         -o $msi
     if ($LASTEXITCODE -ne 0) { throw "WiX build failed ($LASTEXITCODE)" }

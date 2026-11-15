@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
   <?ifndef ProductVersion ?>
   <?define ProductVersion = "1.2.0" ?>
@@ -22,14 +23,20 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of FloatView is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- Show a real setup wizard (welcome, license, progress, finish) instead
+         of the silent basic progress dialog. -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <ui:WixUI Id="WixUI_Minimal" />
+
     <Icon Id="AppIcon" SourceFile="..\FloatView\Assets\app.ico" />
 
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPHELPLINK" Value="https://github.com/Spandan-0230/FloatView" />
     <Property Id="ARPCOMMENTS" Value="Picture-in-Picture for any window" />
     <Property Id="ARPCONTACT" Value="Spandan" />
-    <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch FloatView" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
 
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="ProgramsFolder" Name="Programs">
@@ -68,20 +75,26 @@
                            RebootPrompt="no"
                            TerminateProcess="5000" />
 
-    <!-- Launch only for an interactive first install; silent deployments stay
-         silent. -->
+    <!-- Launch from the finish page only, and only when the user leaves the
+         "Launch FloatView" option checked. Silent installs stay silent. -->
+    <Property Id="WixShellExecTarget" Value="[#FloatViewExe]" />
     <CustomAction Id="LaunchApplication"
-                  FileRef="FloatViewExe"
-                  ExeCommand=""
-                  Execute="immediate"
-                  Return="asyncNoWait" />
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixShellExec"
+                  Impersonate="yes" />
     <CustomAction Id="SetArpInstallLocation"
                   Property="ARPINSTALLLOCATION"
                   Value="[INSTALLFOLDER]"
                   Execute="immediate" />
     <InstallExecuteSequence>
       <Custom Action="SetArpInstallLocation" After="CostFinalize" />
-      <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND UILevel &gt;= 4" />
     </InstallExecuteSequence>
+    <UI>
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="LaunchApplication"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
   </Package>
 </Wix>
