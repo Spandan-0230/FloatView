@@ -69,8 +69,7 @@ installer asks it to close before replacing the executable.
    launcher.
 6. Click the music-note button in the preview toolbar to show the optional media
    controls. Play/pause and seek use the Windows media session when the source
-   publishes one — this is what makes YouTube and other web video work in
-   Chrome, even when the page is not focused, with exact ±5-second seeks.
+   publishes one — this is what makes video work even when the page is not focused, with exact ±5-second seeks.
    Players without a media session fall back to posted player shortcuts; VLC,
    for example, follows its short-jump setting (10 seconds by default). Raise
    `SeekPresses` in the settings file to send more than one jump per click.
@@ -79,6 +78,14 @@ installer asks it to close before replacing the executable.
    stealing and keep the live preview running. To keep the preview live without
    auto-restore, switch windows with **Alt+Tab** instead of minimizing.
 8. Press **Esc** while selecting a region to cancel.
+
+## UI 
+<img width="460" height="275" alt="image" src="https://github.com/user-attachments/assets/9e372abd-5966-4615-bf04-4fa34d7ffc8b" /><br>
+<img width="439" height="325" alt="image" src="https://github.com/user-attachments/assets/158d8d2b-2837-4b55-a2ac-a58ae9955745" /><br>
+<img width="916" height="717" alt="image" src="https://github.com/user-attachments/assets/4cc2b508-cfa0-4d72-9a36-781866d1bc57" /><br>
+<img width="1035" height="564" alt="image" src="https://github.com/user-attachments/assets/36681ee4-1f7e-4279-92c2-2c38a5161cab" /><br>
+- You can use it over VLC or any app-based video and control it.<br>
+<img width="257" height="41" alt="image" src="https://github.com/user-attachments/assets/50bc7206-1b43-4897-9542-0adde23c39c7" /> 
 
 ## Build
 
