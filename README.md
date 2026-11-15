@@ -1,8 +1,8 @@
 # FloatView
 
-A focused Picture-in-Picture utility for Windows. Pick any open window, drag out
-the exact area you want, and keep it floating above your work as a live,
-always-on-top preview.
+A focused Picture-in-Picture utility for Windows. Pick any open window,
+fine-tune the exact crop you want, and keep it floating above your work as a
+live, always-on-top preview.
 
 FloatView is an independent, from-scratch C# / WPF application with no external
 packages or runtime downloads.
@@ -11,8 +11,10 @@ packages or runtime downloads.
 
 - **Any window** — mirror browsers, video players, dashboards, documents, or
   anything else with a top-level window.
-- **Precise region selection** — drag, move, and resize the selection with a
-  live size readout.
+- **Precise region selection** — the picker opens on a suggested crop. Drag
+  inside the selection to move it, drag the edges or corner handles to resize,
+  and watch the live size readout. Clicking the dimmed area is ignored, and no
+  mouse or wheel input ever reaches the source window.
 - **Live DWM preview** — smooth, hardware-composited mirroring with no screen
   recording overhead.
 - **Always on top** — keep the preview visible while you work in other apps.
@@ -20,15 +22,19 @@ packages or runtime downloads.
   windows, so FloatView swaps the frozen frame for a clean restore card. Enable
   *Always restore automatically* and the source is brought back without
   stealing focus, keeping the preview live.
-- **Media controls** — an optional toolbar cluster adds play/pause and
-  back/forward seek for video sources without opening the player. Commands are
-  posted to the source window, so the preview never loses focus.
+- **Media controls** — an optional toolbar cluster adds play/pause and ±5 s seek
+  for video sources without opening the player. Websites such as YouTube are
+  controlled through the Windows media session, so they respond even when the
+  page is not focused; players without a media session fall back to posted
+  player keys, and the preview never loses focus.
 - **Aspect-ratio lock** — resize without distorting the source.
 - **Hover toolbar** — change the source window or close the preview from a
   compact floating toolbar.
+- **Launcher on close** — closing the preview returns to the launcher instead of
+  leaving the app running without a visible window.
 - **Region memory** — FloatView remembers the last selected area for each app.
-- **Dark, distraction-free UI** — neutral charcoal surfaces with a single blue
-  accent.
+- **Pure-black UI** — black surfaces with a single white accent. Buttons get a
+  soft white glow on hover and keyboard focus.
 
 ## Requirements
 
@@ -36,22 +42,38 @@ packages or runtime downloads.
 - Windows 11 recommended for rounded window corners
 - 64-bit Windows
 
+## Install
+
+Run `FloatView-Setup-<version>-x64.msi` and follow the prompts. The installer
+targets the current user only, so it does not ask for administrator rights. It
+installs to `%LocalAppData%\Programs\FloatView` and adds a Start menu shortcut.
+
+After installation, press the Windows key and type **FloatView** to open it.
+Right-click the result to pin FloatView to Start or the taskbar. To remove it,
+use **Settings > Apps > Installed apps > FloatView > Uninstall**. Installing a
+newer MSI upgrades the existing copy in place; if FloatView is running, the
+installer asks it to close before replacing the executable.
+
 ## Usage
 
-1. Launch `FloatView.exe`.
-2. Select the window you want to mirror.
-3. Click **Start Picture-in-Picture**.
-4. Drag over the source window to choose the area, then press **Enter** or click
-   **Start PiP**.
+1. Open FloatView from Windows Search, the Start menu, or its shortcut.
+2. Select the window you want to mirror and click **Start Picture-in-Picture**.
+   FloatView brings that window to the front first, then opens the region picker
+   over it.
+3. The picker opens on a suggested crop. Drag inside it to move the selection,
+   drag an edge or corner handle to resize, then press **Enter** or click
+   **Start PiP**. Clicks in the dimmed area do nothing, so choosing a region
+   never disturbs the source.
 5. Move the floating preview by dragging it. Hover it to reveal the toolbar for
-   aspect-ratio lock, source change, and close.
+   aspect-ratio lock, source change, and close. Closing the preview reopens the
+   launcher.
 6. Click the music-note button in the preview toolbar to show the optional media
-   controls: play/pause, seek back, and seek forward. Seeking posts the player's
-   own back/forward shortcut, so about 5 seconds in browsers; VLC follows its
-   configured short-jump value. Raise `SeekPresses` in the settings file to send
-   more than one jump per click. Play/pause works with VLC and Chromium browsers
-   playing web video (YouTube and similar sites); other native players work when
-   they handle Windows media commands.
+   controls. Play/pause and seek use the Windows media session when the source
+   publishes one — this is what makes YouTube and other web video work in
+   Chrome, even when the page is not focused, with exact ±5-second seeks.
+   Players without a media session fall back to posted player shortcuts; VLC,
+   for example, follows its short-jump setting (10 seconds by default). Raise
+   `SeekPresses` in the settings file to send more than one jump per click.
 7. If the source is minimized, the preview pauses and shows a restore card.
    Tick *Always restore automatically* to bring the source back without focus
    stealing and keep the live preview running. To keep the preview live without
@@ -80,6 +102,28 @@ dotnet publish FloatView\FloatView.csproj -c Release -r win-x64 `
 ```
 
 The result is `publish\FloatView.exe`.
+
+### Build the installer
+
+The MSI uses WiX Toolset 4.0.5. Later WiX releases require accepting the paid
+Open Source Maintenance Fee EULA, so this project stays on 4.0.5. Install the
+tool and its Util extension once:
+
+```powershell
+dotnet tool install --global wix --version 4.0.5
+wix extension add -g WixToolset.Util.wixext/4.0.5
+```
+
+Then run the build script from the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+```
+
+The script publishes the self-contained executable and writes
+`dist\FloatView-Setup-<version>-x64.msi`. The MSI is per-user: it installs to
+`%LocalAppData%\Programs\FloatView`, creates the Start menu shortcut that
+Windows Search and pinning use, and registers FloatView in Apps & Features.
 
 ## Data and privacy
 

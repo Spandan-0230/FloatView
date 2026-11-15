@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using FloatView.Interop;
 using FloatView.Models;
 using FloatView.Services;
 using FloatView.ViewModels;
@@ -138,7 +139,7 @@ public partial class ShellWindow : Window
         }
     }
 
-    private void OnStartRequested(object? sender, AppWindow target)
+    private async void OnStartRequested(object? sender, AppWindow target)
     {
         if (_startingPip || _picker is not null)
             return;
@@ -152,11 +153,23 @@ public partial class ShellWindow : Window
             _viewModel.IsPopupOpen = false;
 
             AppLog.Info($"Opening region picker for 0x{target.Handle.ToInt64():X} '{target.Title}'");
+
+            // Hide the launcher and raise the chosen window before the overlay
+            // appears. The picker is topmost and covers the source exactly, so
+            // showing it while an unrelated window is in front makes it look
+            // like the picker landed on the wrong app.
+            Hide();
+            BringToFront(target);
+
+            // Give the source a moment to paint above other windows before the
+            // dimmed selection surface covers it.
+            await Task.Delay(180);
+            if (Dispatcher.HasShutdownStarted)
+                return;
+
             _picker = new RegionPickerWindow(target, _settings);
             _picker.Confirmed += OnPickerConfirmed;
             _picker.Cancelled += OnPickerCancelled;
-
-            Hide();
             _picker.Show();
         }
         catch (Exception ex)
@@ -167,6 +180,37 @@ public partial class ShellWindow : Window
         finally
         {
             _startingPip = false;
+        }
+    }
+
+    /// <summary>
+    /// Restores the target if needed and raises it above other normal windows.
+    /// The picker itself is topmost, so this keeps the selected app visible
+    /// underneath the dimmed selection layer.
+    /// </summary>
+    private static void BringToFront(AppWindow target)
+    {
+        try
+        {
+            if (!Win32Native.IsWindow(target.Handle))
+                return;
+
+            if (Win32Native.IsIconic(target.Handle))
+                Win32Native.ShowWindow(target.Handle, Win32Native.SW_RESTORE);
+
+            Win32Native.SetWindowPos(
+                target.Handle,
+                IntPtr.Zero,
+                0,
+                0,
+                0,
+                0,
+                Win32Native.SWP_NOMOVE | Win32Native.SWP_NOSIZE | Win32Native.SWP_SHOWWINDOW);
+            Win32Native.SetForegroundWindow(target.Handle);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Could not raise the target window: " + ex.Message);
         }
     }
 

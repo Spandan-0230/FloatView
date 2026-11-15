@@ -15,10 +15,17 @@ public sealed class SelectionSurface : FrameworkElement
     private const double HandleHitSlop = 9.0;
     private const double HandleVisualSize = 7.0;
 
+    /// <summary>
+    /// Almost invisible fill (alpha 1/255) that makes the whole surface hit
+    /// testable. Without it the empty selection window would let clicks fall
+    /// through to the source application underneath.
+    /// </summary>
+    private static readonly Brush HitTestFill =
+        new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+
     private enum Zone
     {
         None,
-        New,
         Move,
         N,
         S,
@@ -33,8 +40,10 @@ public sealed class SelectionSurface : FrameworkElement
     private Zone _zone = Zone.None;
     private Point _dragStart;
     private Rect _startRect;
-    private Rect _rectBeforeNew;
     private bool _dragging;
+
+    /// <summary>Raised when a move or resize gesture finishes.</summary>
+    public event EventHandler? DragCompleted;
 
     public SelectionSurface()
     {
@@ -109,9 +118,12 @@ public sealed class SelectionSurface : FrameworkElement
         if (full.Width <= 0 || full.Height <= 0)
             return;
 
+        // Hit-testable everywhere, including the clear selection window.
+        dc.DrawRectangle(HitTestFill, null, full);
+
         var selection = Selection;
-        var accent = TryFindResource("BrushAccent") as Brush ?? new SolidColorBrush(Color.FromRgb(0x4F, 0x8C, 0xFF));
-        var dim = TryFindResource("BrushOverlayDim") as Brush ?? new SolidColorBrush(Color.FromArgb(0x8C, 0x04, 0x04, 0x0A));
+        var accent = TryFindResource("BrushAccent") as Brush ?? Brushes.White;
+        var dim = TryFindResource("BrushOverlayDim") as Brush ?? new SolidColorBrush(Color.FromArgb(0xB8, 0, 0, 0));
 
         if (selection.IsEmpty || selection.Width <= 0 || selection.Height <= 0)
         {
@@ -125,12 +137,17 @@ public sealed class SelectionSurface : FrameworkElement
             new RectangleGeometry(selection));
         dc.DrawGeometry(dim, null, dimGeometry);
 
-        var accentPen = new Pen(accent, 1.6);
+        // Soft outer glow under the crop line.
+        var glowPen = new Pen(new SolidColorBrush(Color.FromArgb(0x24, 0xFF, 0xFF, 0xFF)), 5);
+        glowPen.Freeze();
+        dc.DrawRectangle(null, glowPen, selection);
+
+        var accentPen = new Pen(accent, 1.4);
         accentPen.Freeze();
         dc.DrawRectangle(null, accentPen, selection);
 
         var handleFill = Brushes.White;
-        var handlePen = new Pen(accent, 1.2);
+        var handlePen = new Pen(new SolidColorBrush(Color.FromArgb(0x59, 0, 0, 0)), 1);
         handlePen.Freeze();
 
         foreach (var corner in HandleCenters(selection))
@@ -143,10 +160,10 @@ public sealed class SelectionSurface : FrameworkElement
             dc.DrawRoundedRectangle(handleFill, handlePen, handleRect, 2, 2);
         }
 
-        DrawSizeLabel(dc, selection, accent);
+        DrawSizeLabel(dc, selection);
     }
 
-    private void DrawSizeLabel(DrawingContext dc, Rect selection, Brush accent)
+    private void DrawSizeLabel(DrawingContext dc, Rect selection)
     {
         var dpi = VisualTreeHelper.GetDpi(this);
         var text = new FormattedText(
@@ -168,7 +185,7 @@ public sealed class SelectionSurface : FrameworkElement
         if (y < 4)
             y = selection.Top + 7;
 
-        var background = new SolidColorBrush(Color.FromArgb(0xD9, 0x0C, 0x0C, 0x12));
+        var background = new SolidColorBrush(Color.FromArgb(0xF2, 0x00, 0x00, 0x00));
         background.Freeze();
 
         dc.DrawRoundedRectangle(background, null, new Rect(x, y, boxWidth, boxHeight), 5, 5);
@@ -200,24 +217,20 @@ public sealed class SelectionSurface : FrameworkElement
             return;
 
         Focus();
-        _dragStart = ClampPoint(point, bounds);
-        _dragging = true;
-        CaptureMouse();
+        e.Handled = true;
 
+        // Crop semantics: drag inside the selection to move it, drag an edge or
+        // handle to resize. Clicking the dimmed area deliberately does nothing,
+        // so a stray click can never discard the current selection.
         var zone = HitTestZone(point, Selection);
         if (zone == Zone.None)
-        {
-            _rectBeforeNew = Selection;
-            _zone = Zone.New;
-            Selection = new Rect(_dragStart, new Size(0, 0));
-        }
-        else
-        {
-            _zone = zone;
-            _startRect = Selection;
-        }
+            return;
 
-        e.Handled = true;
+        _dragStart = ClampPoint(point, bounds);
+        _dragging = true;
+        _zone = zone;
+        _startRect = Selection;
+        CaptureMouse();
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -234,17 +247,9 @@ public sealed class SelectionSurface : FrameworkElement
         }
 
         var clamped = ClampPoint(point, bounds);
-        if (_zone == Zone.New)
-        {
-            Selection = ClampRect(Normalize(_dragStart, clamped), bounds, MinSize);
-            return;
-        }
-
-        var candidate = _zone == Zone.Move
+        Selection = _zone == Zone.Move
             ? MoveRect(_startRect, clamped.X - _dragStart.X, clamped.Y - _dragStart.Y, bounds)
             : ResizeRect(_startRect, clamped, _zone, bounds, MinSize);
-
-        Selection = candidate;
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -257,16 +262,11 @@ public sealed class SelectionSurface : FrameworkElement
         _dragging = false;
         _zone = Zone.None;
         ReleaseMouseCapture();
-
-        if (Selection.Width < MinSize || Selection.Height < MinSize)
-        {
-            if (!_rectBeforeNew.IsEmpty)
-                Selection = _rectBeforeNew;
-            else if (!Selection.IsEmpty)
-                Selection = ClampRect(new Rect(Selection.X, Selection.Y, MinSize, MinSize), EffectiveBounds, MinSize);
-        }
-
         e.Handled = true;
+
+        // A plain click does not count as an adjustment.
+        if (Selection != _startRect)
+            DragCompleted?.Invoke(this, EventArgs.Empty);
     }
 
     protected override void OnLostMouseCapture(MouseEventArgs e)
@@ -306,8 +306,6 @@ public sealed class SelectionSurface : FrameworkElement
 
         return new Rect(new Point(left, top), new Point(right, bottom));
     }
-
-    private static Rect Normalize(Point a, Point b) => new(a, b);
 
     private static Rect ClampRect(Rect rect, Rect bounds, double minSize)
     {
@@ -357,6 +355,6 @@ public sealed class SelectionSurface : FrameworkElement
         Zone.N or Zone.S => Cursors.SizeNS,
         Zone.E or Zone.W => Cursors.SizeWE,
         Zone.Move => Cursors.SizeAll,
-        _ => Cursors.Cross,
+        _ => Cursors.Arrow,
     };
 }

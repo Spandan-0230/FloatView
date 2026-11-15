@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <?ifndef ProductVersion ?>
+  <?define ProductVersion = "1.2.0" ?>
+  <?endif ?>
+
+  <!-- Per-user install: no administrator prompt. The Start Menu shortcut is
+       what makes FloatView appear in Windows Search and pinnable to Start or
+       the taskbar. Apps & Features gets the uninstall entry from Windows
+       Installer automatically. -->
+  <Package Name="FloatView"
+           Manufacturer="Spandan"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="31F71A5A-DB2B-40EE-BC39-EFD68BC2A7DF"
+           Scope="perUser"
+           Compressed="yes"
+           InstallerVersion="500"
+           Language="1033">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of FloatView is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon" SourceFile="..\FloatView\Assets\app.ico" />
+
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/Spandan-0230/FloatView" />
+    <Property Id="ARPCOMMENTS" Value="Picture-in-Picture for any window" />
+    <Property Id="ARPCONTACT" Value="Spandan" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="FloatView" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="FloatView" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="FloatView" Level="1">
+      <Component Id="MainExecutable" Directory="INSTALLFOLDER" Guid="9C9974A1-8B73-4B26-9D5B-FA28A96663CF">
+        <File Id="FloatViewExe" Source="..\publish\FloatView.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut"
+                    Directory="ApplicationProgramsFolder"
+                    Name="FloatView"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="AppIcon"
+                    Advertise="no" />
+        </File>
+      </Component>
+
+      <Component Id="Documents" Directory="INSTALLFOLDER" Guid="BD3F1C0B-EC05-496C-BDD8-F782DB9D601F">
+        <File Id="ReadmeFile" Source="..\README.md" Name="README.md" />
+        <File Id="LicenseFile" Source="..\LICENSE" Name="LICENSE" KeyPath="yes" />
+      </Component>
+    </Feature>
+
+    <!-- Ask a running copy to close before the executable is replaced, and
+         fall back to terminating it if it does not exit in time. -->
+    <util:CloseApplication Id="CloseFloatView"
+                           Target="FloatView.exe"
+                           CloseMessage="yes"
+                           PromptToContinue="no"
+                           RebootPrompt="no"
+                           TerminateProcess="5000" />
+
+    <!-- Launch only for an interactive first install; silent deployments stay
+         silent. -->
+    <CustomAction Id="LaunchApplication"
+                  FileRef="FloatViewExe"
+                  ExeCommand=""
+                  Execute="immediate"
+                  Return="asyncNoWait" />
+    <CustomAction Id="SetArpInstallLocation"
+                  Property="ARPINSTALLLOCATION"
+                  Value="[INSTALLFOLDER]"
+                  Execute="immediate" />
+    <InstallExecuteSequence>
+      <Custom Action="SetArpInstallLocation" After="CostFinalize" />
+      <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND UILevel &gt;= 4" />
+    </InstallExecuteSequence>
+  </Package>
+</Wix>

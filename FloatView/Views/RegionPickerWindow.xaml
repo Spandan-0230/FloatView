@@ -19,14 +19,14 @@
         PreviewKeyDown="Window_PreviewKeyDown"
         Closing="Window_Closing">
 
-    <Grid x:Name="Root">
+    <Grid x:Name="Root" Background="#01000000">
         <controls:SelectionSurface x:Name="Selector" MinSize="40" />
 
         <!-- Instruction pill -->
         <Border VerticalAlignment="Top"
                 HorizontalAlignment="Center"
                 Margin="0,18,0,0"
-                Background="#EB121218"
+                Background="#F2000000"
                 BorderBrush="{StaticResource BrushBorder}"
                 BorderThickness="1"
                 CornerRadius="999"
@@ -45,7 +45,7 @@
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
                 <TextBlock Text="  ·  " FontSize="11.5" Foreground="{StaticResource BrushTextDim}" VerticalAlignment="Center" />
-                <TextBlock Text="Drag to select the area" FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center" />
+                <TextBlock Text="Drag inside to move  ·  drag edges to resize" FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center" />
                 <TextBlock Text="  ·  " FontSize="11.5" Foreground="{StaticResource BrushTextDim}" VerticalAlignment="Center" />
                 <TextBlock Text="Enter" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource BrushAccent}" VerticalAlignment="Center" />
                 <TextBlock Text=" confirm, " FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center" />

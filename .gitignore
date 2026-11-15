@@ -2,6 +2,8 @@
 bin/
 obj/
 publish/
+dist/
+.wix/
 
 # Visual Studio / Rider
 .vs/

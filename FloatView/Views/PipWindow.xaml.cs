@@ -44,6 +44,7 @@ public partial class PipWindow : Window
     private bool _mediaSettingsReady;
     private IntPtr _minimizeHook;
     private Win32Native.WinEventDelegate? _minimizeHookDelegate;
+    private DateTime? _sourceMissingSince;
 
     /// <summary>True once the DWM thumbnail is attached and the preview is live.</summary>
     public bool IsPreviewReady { get; private set; }
@@ -69,10 +70,16 @@ public partial class PipWindow : Window
         {
             if (!Win32Native.IsWindow(_selection.SourceHandle))
             {
-                Close();
+                if (SourceStillMissing())
+                {
+                    AppLog.Warn("Source window is no longer available; closing preview");
+                    Close();
+                }
+
                 return;
             }
 
+            _sourceMissingSince = null;
             SyncMinimizedState(allowAutoRestore: true);
         };
 
@@ -80,6 +87,7 @@ public partial class PipWindow : Window
         _mediaSettingsReady = true;
 
         SourceInitialized += OnSourceInitialized;
+        Closing += OnClosing;
         Closed += OnClosed;
         SizeChanged += (_, _) => UpdateThumbnail();
     }
@@ -158,6 +166,18 @@ public partial class PipWindow : Window
     }
 
     /// <summary>
+    /// True once the source handle has been missing long enough to be treated
+    /// as closed. A short grace period avoids reacting to transient window
+    /// recreation while a browser switches between its top-level windows.
+    /// </summary>
+    private bool SourceStillMissing()
+    {
+        var now = DateTime.UtcNow;
+        _sourceMissingSince ??= now;
+        return (now - _sourceMissingSince.Value).TotalSeconds >= 2;
+    }
+
+    /// <summary>
     /// Keeps the preview in sync with the source's minimized state. Windows
     /// stops rendering minimized windows, so a frozen thumbnail is replaced
     /// by the restore overlay (or the source is auto-restored if enabled).
@@ -169,9 +189,16 @@ public partial class PipWindow : Window
 
         if (!Win32Native.IsWindow(_selection.SourceHandle))
         {
-            Close();
+            if (SourceStillMissing())
+            {
+                AppLog.Warn("Source window is no longer available; closing preview");
+                Close();
+            }
+
             return;
         }
+
+        _sourceMissingSince = null;
 
         if (!Win32Native.IsIconic(_selection.SourceHandle))
         {
@@ -447,9 +474,7 @@ public partial class PipWindow : Window
     {
         // Show the launcher first: with ShutdownMode.OnLastWindowClose,
         // closing the last PiP before a new window exists would exit the app.
-        var shell = new ShellWindow();
-        shell.Show();
-        shell.Activate();
+        ShellLauncher.Show();
         Close();
     }
 
@@ -490,9 +515,9 @@ public partial class PipWindow : Window
             _settings.SetShowMediaControls(show);
     }
 
-    private void PlayPause_Click(object sender, RoutedEventArgs e)
+    private async void PlayPause_Click(object sender, RoutedEventArgs e)
     {
-        MediaController.TogglePlayPause(_selection.SourceHandle);
+        await MediaController.TogglePlayPauseAsync(_selection.SourceHandle);
     }
 
     private async void SeekBack_Click(object sender, RoutedEventArgs e) => await SeekAsync(false);
@@ -563,6 +588,17 @@ public partial class PipWindow : Window
             Win32Native.SWP_NOZORDER | Win32Native.SWP_NOACTIVATE);
 
         UpdateThumbnail();
+    }
+
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // Reopen the launcher before this window closes. With
+        // ShutdownMode.OnLastWindowClose, waiting for Closed would already be
+        // too late: the app would shut down with no visible window.
+        if (Dispatcher.HasShutdownStarted)
+            return;
+
+        ShellLauncher.Show();
     }
 
     private void OnClosed(object? sender, EventArgs e)

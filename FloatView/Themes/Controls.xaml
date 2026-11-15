@@ -50,7 +50,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="{StaticResource BrushSurfaceActive}"
+                    <Border Background="#F2000000"
                             BorderBrush="{StaticResource BrushBorderStrong}"
                             BorderThickness="1"
                             CornerRadius="6"
@@ -80,16 +80,29 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
+                            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
                             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#1FFFFFFF" />
                         </Trigger>
                         <Trigger Property="Tag" Value="Danger">
-                            <Setter TargetName="Bd" Property="Background" Value="#33E5484D" />
-                            <Setter Property="Foreground" Value="#FF8A8F" />
+                            <Setter Property="Foreground" Value="#FF9A9E" />
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="Tag" Value="Danger" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="Background" Value="#26E5484D" />
+                            <Setter Property="Foreground" Value="#FFB3B6" />
+                        </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.35" />
                         </Trigger>
@@ -99,10 +112,11 @@
         </Setter>
     </Style>
 
-    <!-- ============ Primary action ============ -->
+    <!-- ============ Primary action: white fill, black text ============ -->
     <Style x:Key="AccentButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="44" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#0A0A0A" />
         <Setter Property="FontFamily" Value="{StaticResource FontUi}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -111,29 +125,20 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid>
-                        <Border x:Name="Bd"
-                                Background="{StaticResource BrushAccentGradient}"
-                                CornerRadius="9">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="18"
-                                                  ShadowDepth="3"
-                                                  Opacity="0.35"
-                                                  Color="#4F8CFF" />
-                            </Border.Effect>
-                        </Border>
-                        <Border x:Name="Sheen"
-                                Background="White"
-                                CornerRadius="9"
-                                Opacity="0" />
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Grid>
+                    </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Sheen" Property="Opacity" Value="0.08" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowWhite}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowWhite}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Sheen" Property="Opacity" Value="0.16" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushAccentPressed}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
@@ -160,17 +165,22 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
                             Background="Transparent"
-                            BorderBrush="{StaticResource BrushBorderStrong}"
+                            BorderBrush="#2AFFFFFF"
                             BorderThickness="1"
                             CornerRadius="8">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#1AFFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -190,7 +200,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
-                            Background="{StaticResource BrushSurfaceGradient}"
+                            Background="{StaticResource BrushSurface}"
                             BorderBrush="{StaticResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="10"
@@ -201,6 +211,9 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BrushBorderStrong}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#80FFFFFF" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
@@ -223,7 +236,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border Background="{TemplateBinding Background}"
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
                             BorderBrush="{StaticResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
@@ -245,6 +259,9 @@
                         <Trigger Property="Text" Value="">
                             <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
                         </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#80FFFFFF" />
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -262,18 +279,33 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Bd"
-                            Background="Transparent"
-                            CornerRadius="7"
-                            Padding="9,7">
-                        <ContentPresenter />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                CornerRadius="7"
+                                Padding="9,7">
+                            <ContentPresenter />
+                        </Border>
+                        <Border x:Name="Bar"
+                                Width="2"
+                                Height="16"
+                                CornerRadius="1"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource BrushAccent}"
+                                Opacity="0"
+                                IsHitTestVisible="False" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSelectionTint}" />
+                            <Setter TargetName="Bar" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1FFFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -304,11 +336,18 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF" />
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
+                            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="Effect" Value="{StaticResource GlowSoft}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
                             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource BrushAccent}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#18FFFFFF" />
+                            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -343,7 +382,7 @@
                                        Text="&#xE73E;"
                                        FontFamily="{StaticResource FontIcon}"
                                        FontSize="8"
-                                       Foreground="White"
+                                       Foreground="#000000"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        Visibility="Collapsed" />
@@ -357,10 +396,11 @@
                             <Setter TargetName="Box" Property="Background" Value="{StaticResource BrushAccent}" />
                             <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushAccent}" />
                             <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushAccent}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="#80FFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

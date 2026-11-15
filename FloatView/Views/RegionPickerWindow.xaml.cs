@@ -37,6 +37,18 @@ public partial class RegionPickerWindow : Window
 
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
+
+        // The selection surface swallows input so clicks can never reach the
+        // source application; log adjustments so the crop behavior is testable.
+        Selector.DragCompleted += (_, _) => AppLog.Info(
+            $"Picker selection adjusted: {Selector.Selection.Left:F0},{Selector.Selection.Top:F0} " +
+            $"{Selector.Selection.Width:F0}x{Selector.Selection.Height:F0}");
+    }
+
+    protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+    {
+        // Keep the wheel from scrolling the source window underneath.
+        e.Handled = true;
     }
 
     public event EventHandler<SelectionResult>? Confirmed;

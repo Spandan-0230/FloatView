@@ -26,7 +26,7 @@
     </WindowChrome.WindowChrome>
 
     <Grid x:Name="Root"
-          Background="#0A0A10"
+          Background="#000000"
           MouseLeftButtonDown="Root_MouseLeftButtonDown"
           MouseEnter="Root_MouseEnter"
           MouseLeave="Root_MouseLeave">
@@ -154,9 +154,9 @@
         </Border>
 
         <!-- Live thumbnail area (painted by DWM) -->
-        <Grid Grid.Row="1" Background="#0A0A10">
+        <Grid Grid.Row="1" Background="#000000">
             <Path Data="M0,12 L12,0 M4,12 L12,4 M8,12 L12,8"
-                  Stroke="#59FFFFFF"
+                  Stroke="#40FFFFFF"
                   StrokeThickness="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Bottom"
@@ -166,12 +166,12 @@
             <!-- Shown when the source is minimized: DWM stops producing frames
                  for minimized windows, so the frozen image is hidden instead. -->
             <Grid x:Name="MinimizeOverlay"
-                  Background="#EB0A0A10"
+                  Background="#ED000000"
                   Visibility="Collapsed">
                 <Viewbox Stretch="Uniform"
                          StretchDirection="DownOnly"
                          Margin="10">
-                    <Border Background="{StaticResource BrushSurfaceGradient}"
+                    <Border Background="{StaticResource BrushSurface}"
                             BorderBrush="{StaticResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="12"
@@ -237,7 +237,7 @@
 
         <!-- Refined window edge -->
         <Border Grid.RowSpan="2"
-                BorderBrush="#1FFFFFFF"
+                BorderBrush="#26FFFFFF"
                 BorderThickness="1"
                 IsHitTestVisible="False" />
     </Grid>

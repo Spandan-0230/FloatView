@@ -22,7 +22,7 @@
         Closing="Window_Closing">
 
     <Border Margin="12"
-            Background="{StaticResource BrushWindowGradient}"
+            Background="{StaticResource BrushWindow}"
             BorderBrush="{StaticResource BrushBorder}"
             BorderThickness="1"
             CornerRadius="{StaticResource RadiusCard}"
@@ -44,17 +44,17 @@
                     <Border Width="30"
                             Height="30"
                             CornerRadius="9"
-                            Background="{StaticResource BrushAccentGradient}">
+                            Background="{StaticResource BrushAccent}">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="14"
-                                              ShadowDepth="2"
-                                              Opacity="0.45"
-                                              Color="#4F8CFF" />
+                                              ShadowDepth="0"
+                                              Opacity="0.35"
+                                              Color="#FFFFFF" />
                         </Border.Effect>
                         <TextBlock Text="&#xE8B9;"
                                    FontFamily="{StaticResource FontIcon}"
                                    FontSize="14"
-                                   Foreground="White"
+                                   Foreground="#0A0A0A"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                     </Border>
@@ -92,8 +92,8 @@
             <StackPanel Grid.Row="1" Margin="16,14,16,18">
                 <StackPanel Orientation="Horizontal" Margin="2,0,0,7">
                     <Ellipse Width="4" Height="4" Fill="{StaticResource BrushAccent}" VerticalAlignment="Center" />
-                    <TextBlock Text="TARGET WINDOW"
-                               FontSize="9.5"
+                    <TextBlock Text="Target window"
+                               FontSize="10"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource BrushTextMuted}"
                                Margin="7,0,0,0"
