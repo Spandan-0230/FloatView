@@ -25,4 +25,16 @@ public sealed class AppSettings
     public double? ShellLeft { get; set; }
 
     public double? ShellTop { get; set; }
+
+    /// <summary>
+    /// When true, a minimized source is restored automatically (without
+    /// stealing focus) so the live preview keeps running.
+    /// </summary>
+    public bool AutoRestoreSource { get; set; }
+
+    /// <summary>Whether the media transport controls are shown in the PiP toolbar.</summary>
+    public bool ShowMediaControls { get; set; }
+
+    /// <summary>Arrow presses sent per seek click, tuned to the player's jump size.</summary>
+    public int SeekPresses { get; set; } = 1;
 }

@@ -83,5 +83,25 @@ public sealed class ThumbnailService : IDisposable
         _thumbnail = IntPtr.Zero;
     }
 
+    /// <summary>
+    /// Hides or shows the thumbnail. Used to avoid leaving a frozen frame on
+    /// screen while the source window is minimized.
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        if (_thumbnail == IntPtr.Zero)
+            return;
+
+        var props = new DwmNative.DWM_THUMBNAIL_PROPERTIES
+        {
+            dwFlags = DwmNative.DWM_TNP_VISIBLE,
+            fVisible = visible ? 1 : 0,
+        };
+
+        var hr = DwmNative.DwmUpdateThumbnailProperties(_thumbnail, ref props);
+        if (hr != 0)
+            AppLog.Warn($"DwmUpdateThumbnailProperties(visible) failed: 0x{hr:X8}");
+    }
+
     public void Dispose() => Detach();
 }

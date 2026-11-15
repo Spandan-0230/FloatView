@@ -179,7 +179,7 @@ public partial class ShellWindow : Window
                 $"rect={selection.SourceClientRect.Left},{selection.SourceClientRect.Top}," +
                 $"{selection.SourceClientRect.Width}x{selection.SourceClientRect.Height}");
 
-            var pip = new PipWindow(selection);
+            var pip = new PipWindow(selection, _settings);
             pip.Show();
             if (!pip.IsPreviewReady)
             {

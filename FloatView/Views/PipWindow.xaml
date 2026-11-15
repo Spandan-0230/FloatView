@@ -44,6 +44,73 @@
                 Opacity="0">
             <DockPanel LastChildFill="True" Margin="6,0,6,0">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ToggleButton x:Name="MediaToggle"
+                                  Style="{StaticResource ToolbarToggleStyle}"
+                                  Margin="0,0,4,0"
+                                  AutomationProperties.Name="Toggle media controls"
+                                  ToolTip="Show media controls"
+                                  Checked="MediaToggle_Changed"
+                                  Unchecked="MediaToggle_Changed">
+                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource FontIcon}" FontSize="11" />
+                    </ToggleButton>
+
+                    <StackPanel x:Name="MediaControls"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                Width="26"
+                                Height="26"
+                                AutomationProperties.Name="Skip back"
+                                ToolTip="Skip back about 5 seconds (VLC uses its short-jump setting)"
+                                Click="SeekBack_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE76B;"
+                                           FontFamily="{StaticResource FontIcon}"
+                                           FontSize="9"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="5"
+                                           FontSize="8"
+                                           FontWeight="SemiBold"
+                                           Margin="1,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                Width="26"
+                                Height="26"
+                                Margin="2,0,0,0"
+                                AutomationProperties.Name="Play or pause"
+                                ToolTip="Play or pause the source media"
+                                Click="PlayPause_Click">
+                            <TextBlock Text="&#xE768;" FontFamily="{StaticResource FontIcon}" FontSize="11" />
+                        </Button>
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                Width="26"
+                                Height="26"
+                                Margin="2,0,0,0"
+                                AutomationProperties.Name="Skip forward"
+                                ToolTip="Skip forward about 5 seconds (VLC uses its short-jump setting)"
+                                Click="SeekForward_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="5"
+                                           FontSize="8"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,1,0"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="&#xE76C;"
+                                           FontFamily="{StaticResource FontIcon}"
+                                           FontSize="9"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Border Width="1"
+                                Height="14"
+                                Margin="5,0,3,0"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource BrushHairline}" />
+                    </StackPanel>
+
                     <Button Style="{StaticResource IconButtonStyle}"
                             Width="26"
                             Height="26"
@@ -95,6 +162,77 @@
                   VerticalAlignment="Bottom"
                   Margin="0,0,5,5"
                   IsHitTestVisible="False" />
+
+            <!-- Shown when the source is minimized: DWM stops producing frames
+                 for minimized windows, so the frozen image is hidden instead. -->
+            <Grid x:Name="MinimizeOverlay"
+                  Background="#EB0A0A10"
+                  Visibility="Collapsed">
+                <Viewbox Stretch="Uniform"
+                         StretchDirection="DownOnly"
+                         Margin="10">
+                    <Border Background="{StaticResource BrushSurfaceGradient}"
+                            BorderBrush="{StaticResource BrushBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="18,15">
+                        <StackPanel Width="230">
+                            <Border Width="34"
+                                    Height="34"
+                                    CornerRadius="10"
+                                    Background="#1AFFFFFF"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE921;"
+                                           FontFamily="{StaticResource FontIcon}"
+                                           FontSize="14"
+                                           Foreground="{StaticResource BrushTextMuted}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Source is minimized"
+                                       FontSize="12.5"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,9,0,0" />
+                            <TextBlock Text="Restore it to resume the live preview."
+                                       FontSize="10.5"
+                                       Foreground="{StaticResource BrushTextMuted}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Margin="0,3,0,0" />
+                            <Border Background="#0FFFFFFF"
+                                    BorderBrush="{StaticResource BrushHairline}"
+                                    BorderThickness="1"
+                                    CornerRadius="7"
+                                    Padding="8,6"
+                                    Margin="0,9,0,0">
+                                <TextBlock Text="Tip: use Alt+Tab to switch away instead of minimizing to keep the preview live."
+                                           FontSize="9.5"
+                                           Foreground="{StaticResource BrushTextMuted}"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap" />
+                            </Border>
+                            <Button Content="Restore"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Height="32"
+                                    MinWidth="112"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,12,0,0"
+                                    AutomationProperties.Name="Restore source window"
+                                    ToolTip="Bring the source window back"
+                                    Click="RestoreSource_Click" />
+                            <CheckBox x:Name="AutoRestoreCheck"
+                                      Content="Always restore automatically"
+                                      Style="{StaticResource CompactCheckBoxStyle}"
+                                      HorizontalAlignment="Center"
+                                      Margin="0,10,0,0"
+                                      AutomationProperties.Name="Always restore minimized source"
+                                      Checked="AutoRestore_Changed"
+                                      Unchecked="AutoRestore_Changed" />
+                        </StackPanel>
+                    </Border>
+                </Viewbox>
+            </Grid>
         </Grid>
 
         <!-- Refined window edge -->

@@ -55,9 +55,19 @@ public partial class RegionPickerWindow : Window
         }
 
         if (Win32Native.IsIconic(_target.Handle))
-            Win32Native.ShowWindow(_target.Handle, Win32Native.SW_RESTORE);
+            Win32Native.ShowWindow(_target.Handle, Win32Native.SW_SHOWNOACTIVATE);
 
-        Win32Native.SetForegroundWindow(_target.Handle);
+        // Raise the source without activating it. Activating a browser here can
+        // move its internal focus to the address bar, which would break the
+        // focus-free media keys later. The picker itself is activated below.
+        Win32Native.SetWindowPos(
+            _target.Handle,
+            IntPtr.Zero,
+            0,
+            0,
+            0,
+            0,
+            Win32Native.SWP_NOMOVE | Win32Native.SWP_NOSIZE | Win32Native.SWP_NOACTIVATE);
 
         if (!Win32Native.GetWindowRect(_target.Handle, out _windowRect) ||
             _windowRect.Width <= 0 ||

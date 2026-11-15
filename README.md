@@ -16,6 +16,13 @@ packages or runtime downloads.
 - **Live DWM preview** — smooth, hardware-composited mirroring with no screen
   recording overhead.
 - **Always on top** — keep the preview visible while you work in other apps.
+- **Minimized-source handling** — Windows pauses rendering for minimized
+  windows, so FloatView swaps the frozen frame for a clean restore card. Enable
+  *Always restore automatically* and the source is brought back without
+  stealing focus, keeping the preview live.
+- **Media controls** — an optional toolbar cluster adds play/pause and
+  back/forward seek for video sources without opening the player. Commands are
+  posted to the source window, so the preview never loses focus.
 - **Aspect-ratio lock** — resize without distorting the source.
 - **Hover toolbar** — change the source window or close the preview from a
   compact floating toolbar.
@@ -38,7 +45,18 @@ packages or runtime downloads.
    **Start PiP**.
 5. Move the floating preview by dragging it. Hover it to reveal the toolbar for
    aspect-ratio lock, source change, and close.
-6. Press **Esc** while selecting a region to cancel.
+6. Click the music-note button in the preview toolbar to show the optional media
+   controls: play/pause, seek back, and seek forward. Seeking posts the player's
+   own back/forward shortcut, so about 5 seconds in browsers; VLC follows its
+   configured short-jump value. Raise `SeekPresses` in the settings file to send
+   more than one jump per click. Play/pause works with VLC and Chromium browsers
+   playing web video (YouTube and similar sites); other native players work when
+   they handle Windows media commands.
+7. If the source is minimized, the preview pauses and shows a restore card.
+   Tick *Always restore automatically* to bring the source back without focus
+   stealing and keep the live preview running. To keep the preview live without
+   auto-restore, switch windows with **Alt+Tab** instead of minimizing.
+8. Press **Esc** while selecting a region to cancel.
 
 ## Build
 
@@ -70,6 +88,10 @@ it does not send any data over the network.
 
 Settings are stored at `%LocalAppData%\FloatView\settings.json`. Diagnostics are
 written to `%LocalAppData%\FloatView\floatview.log`.
+
+Settings include `AutoRestoreSource` (restore minimized sources automatically),
+`ShowMediaControls` (remember the media-controls toggle), and `SeekPresses`
+(number of player jumps sent per seek click).
 
 ## Attribution
 

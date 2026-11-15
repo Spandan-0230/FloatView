@@ -30,6 +30,7 @@ public partial class PipWindow : Window
     private const int WmszBottomRight = 8;
 
     private readonly SelectionResult _selection;
+    private readonly AppSettingsService _settings;
     private readonly ThumbnailService _thumbnail = new();
     private readonly DispatcherTimer _collapseTimer;
     private readonly DispatcherTimer _sourceWatch;
@@ -38,15 +39,21 @@ public partial class PipWindow : Window
     private IntPtr _hwnd;
     private bool _toolbarExpanded;
     private bool _ratioLocked = true;
+    private bool _minimizedShown;
+    private bool _syncingOverlay;
+    private bool _mediaSettingsReady;
+    private IntPtr _minimizeHook;
+    private Win32Native.WinEventDelegate? _minimizeHookDelegate;
 
     /// <summary>True once the DWM thumbnail is attached and the preview is live.</summary>
     public bool IsPreviewReady { get; private set; }
 
-    public PipWindow(SelectionResult selection)
+    public PipWindow(SelectionResult selection, AppSettingsService settings)
     {
         InitializeComponent();
 
         _selection = selection;
+        _settings = settings;
         TitleText.Text = selection.SourceTitle;
         Title = selection.SourceTitle + " — FloatView";
 
@@ -61,8 +68,16 @@ public partial class PipWindow : Window
         _sourceWatch.Tick += (_, _) =>
         {
             if (!Win32Native.IsWindow(_selection.SourceHandle))
+            {
                 Close();
+                return;
+            }
+
+            SyncMinimizedState(allowAutoRestore: true);
         };
+
+        ApplyMediaControls(_settings.Current.ShowMediaControls);
+        _mediaSettingsReady = true;
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -93,12 +108,115 @@ public partial class PipWindow : Window
         _hwndSource = HwndSource.FromHwnd(_hwnd);
         _hwndSource?.AddHook(WndProc);
 
+        InstallMinimizeHook();
+        SyncMinimizedState(allowAutoRestore: true);
+
         _sourceWatch.Start();
         IsPreviewReady = true;
         Win32Native.GetWindowRect(_hwnd, out var actual);
         AppLog.Info(
             $"PiP started for '{_selection.SourceTitle}' at " +
             $"{actual.Left},{actual.Top} {actual.Width}x{actual.Height}");
+    }
+
+    private void InstallMinimizeHook()
+    {
+        try
+        {
+            Win32Native.GetWindowThreadProcessId(_selection.SourceHandle, out var sourcePid);
+            _minimizeHookDelegate = OnSourceMinimizeEvent;
+            _minimizeHook = Win32Native.SetWinEventHook(
+                Win32Native.EVENT_SYSTEM_MINIMIZESTART,
+                Win32Native.EVENT_SYSTEM_MINIMIZEEND,
+                IntPtr.Zero,
+                _minimizeHookDelegate,
+                sourcePid,
+                0,
+                Win32Native.WINEVENT_OUTOFCONTEXT);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Could not install minimize hook: " + ex.Message);
+        }
+    }
+
+    private void OnSourceMinimizeEvent(
+        IntPtr hook,
+        uint eventType,
+        IntPtr hwnd,
+        int idObject,
+        int idChild,
+        uint thread,
+        uint time)
+    {
+        if (hwnd != _selection.SourceHandle || Dispatcher.HasShutdownStarted)
+            return;
+
+        Dispatcher.BeginInvoke(
+            new Action(() => SyncMinimizedState(allowAutoRestore: true)),
+            DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// Keeps the preview in sync with the source's minimized state. Windows
+    /// stops rendering minimized windows, so a frozen thumbnail is replaced
+    /// by the restore overlay (or the source is auto-restored if enabled).
+    /// </summary>
+    private void SyncMinimizedState(bool allowAutoRestore)
+    {
+        if (_hwnd == IntPtr.Zero)
+            return;
+
+        if (!Win32Native.IsWindow(_selection.SourceHandle))
+        {
+            Close();
+            return;
+        }
+
+        if (!Win32Native.IsIconic(_selection.SourceHandle))
+        {
+            ApplyMinimizedState(false);
+            return;
+        }
+
+        if (allowAutoRestore && !_minimizedShown && _settings.Current.AutoRestoreSource)
+        {
+            AppLog.Info("Source minimized; restoring automatically");
+            Win32Native.ShowWindow(_selection.SourceHandle, Win32Native.SW_SHOWNOACTIVATE);
+            Dispatcher.BeginInvoke(
+                new Action(() => SyncMinimizedState(allowAutoRestore: false)),
+                DispatcherPriority.Background);
+            return;
+        }
+
+        ApplyMinimizedState(true);
+    }
+
+    private void ApplyMinimizedState(bool minimized)
+    {
+        if (_minimizedShown == minimized)
+            return;
+
+        _minimizedShown = minimized;
+
+        if (minimized)
+        {
+            AppLog.Info("Source minimized; pausing preview");
+            _thumbnail.SetVisible(false);
+
+            _syncingOverlay = true;
+            AutoRestoreCheck.IsChecked = _settings.Current.AutoRestoreSource;
+            _syncingOverlay = false;
+
+            MinimizeOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            MinimizeOverlay.Visibility = Visibility.Collapsed;
+            _thumbnail.SetVisible(true);
+            UpdateThumbnail();
+            AppLog.Info("Source restored; preview resumed");
+        }
     }
 
     private void ApplyInitialGeometry()
@@ -140,7 +258,7 @@ public partial class PipWindow : Window
 
     private void UpdateThumbnail()
     {
-        if (!_thumbnail.IsAttached || _hwnd == IntPtr.Zero)
+        if (!_thumbnail.IsAttached || _hwnd == IntPtr.Zero || _minimizedShown)
             return;
 
         Win32Native.GetClientRect(_hwnd, out var client);
@@ -349,6 +467,82 @@ public partial class PipWindow : Window
             SnapToAspectRatio();
     }
 
+    private void ApplyMediaControls(bool show)
+    {
+        MediaToggle.IsChecked = show;
+
+        MediaControls.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        MinWidth = show ? 228 : 160;
+        MediaToggle.ToolTip = show ? "Hide media controls" : "Show media controls";
+    }
+
+    private void MediaToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (MediaToggle is null || MediaControls is null)
+            return;
+
+        var show = MediaToggle.IsChecked == true;
+        MediaControls.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        MinWidth = show ? 228 : 160;
+        MediaToggle.ToolTip = show ? "Hide media controls" : "Show media controls";
+
+        if (_mediaSettingsReady)
+            _settings.SetShowMediaControls(show);
+    }
+
+    private void PlayPause_Click(object sender, RoutedEventArgs e)
+    {
+        MediaController.TogglePlayPause(_selection.SourceHandle);
+    }
+
+    private async void SeekBack_Click(object sender, RoutedEventArgs e) => await SeekAsync(false);
+
+    private async void SeekForward_Click(object sender, RoutedEventArgs e) => await SeekAsync(true);
+
+    private async Task SeekAsync(bool forward)
+    {
+        try
+        {
+            await MediaController.SeekAsync(
+                _selection.SourceHandle,
+                forward,
+                _settings.Current.SeekPresses);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("Seek failed: " + ex.Message);
+        }
+    }
+
+    private async void RestoreSource_Click(object sender, RoutedEventArgs e)
+    {
+        RestoreSource();
+        await Task.Delay(180);
+        SyncMinimizedState(allowAutoRestore: false);
+    }
+
+    private void RestoreSource()
+    {
+        if (Win32Native.IsWindow(_selection.SourceHandle))
+            Win32Native.ShowWindow(_selection.SourceHandle, Win32Native.SW_RESTORE);
+    }
+
+    private async void AutoRestore_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_syncingOverlay || AutoRestoreCheck is null)
+            return;
+
+        var enabled = AutoRestoreCheck.IsChecked == true;
+        _settings.SetAutoRestoreSource(enabled);
+
+        if (enabled)
+        {
+            RestoreSource();
+            await Task.Delay(180);
+            SyncMinimizedState(allowAutoRestore: false);
+        }
+    }
+
     private void SnapToAspectRatio()
     {
         if (_hwnd == IntPtr.Zero)
@@ -375,6 +569,14 @@ public partial class PipWindow : Window
     {
         _collapseTimer.Stop();
         _sourceWatch.Stop();
+
+        if (_minimizeHook != IntPtr.Zero)
+        {
+            Win32Native.UnhookWinEvent(_minimizeHook);
+            _minimizeHook = IntPtr.Zero;
+        }
+
+        _minimizeHookDelegate = null;
         _hwndSource?.RemoveHook(WndProc);
         _hwndSource = null;
         _thumbnail.Dispose();

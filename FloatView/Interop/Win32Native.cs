@@ -14,6 +14,12 @@ public static class Win32Native
     public const int WM_SIZING = 0x0214;
     public const int WM_GETMINMAXINFO = 0x0024;
     public const int WM_DPICHANGED = 0x02E0;
+    public const int WM_KEYDOWN = 0x0100;
+    public const int WM_KEYUP = 0x0101;
+    public const int WM_APPCOMMAND = 0x0319;
+
+    // WM_APPCOMMAND commands
+    public const int APPCOMMAND_MEDIA_PLAY_PAUSE = 14;
 
     // Icon types for WM_GETICON
     public const int ICON_SMALL = 0;
@@ -30,6 +36,12 @@ public static class Win32Native
 
     // ShowWindow commands
     public const int SW_RESTORE = 9;
+    public const int SW_SHOWNOACTIVATE = 4;
+
+    // Virtual key codes
+    public const ushort VK_LEFT = 0x25;
+    public const ushort VK_RIGHT = 0x27;
+    public const ushort VK_SPACE = 0x20;
 
     // SetWindowPos flags
     public const uint SWP_NOSIZE = 0x0001;
@@ -47,6 +59,8 @@ public static class Win32Native
     public const uint EVENT_OBJECT_DESTROY = 0x8001;
     public const uint EVENT_OBJECT_SHOW = 0x8002;
     public const uint EVENT_OBJECT_HIDE = 0x8003;
+    public const uint EVENT_SYSTEM_MINIMIZESTART = 0x0016;
+    public const uint EVENT_SYSTEM_MINIMIZEEND = 0x0017;
 
     // WinEvent hook flags
     public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
@@ -213,6 +227,10 @@ public static class Win32Native
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool UnhookWinEvent(IntPtr hook);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool PostMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("shcore.dll")]
     public static extern int GetDpiForMonitor(IntPtr monitor, int dpiType, out uint dpiX, out uint dpiY);

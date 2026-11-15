@@ -46,6 +46,18 @@ public sealed class AppSettingsService
         Save();
     }
 
+    public void SetAutoRestoreSource(bool value)
+    {
+        Current.AutoRestoreSource = value;
+        Save();
+    }
+
+    public void SetShowMediaControls(bool value)
+    {
+        Current.ShowMediaControls = value;
+        Save();
+    }
+
     private static string Normalize(string processName) => processName.ToLowerInvariant();
 
     private AppSettings Load()

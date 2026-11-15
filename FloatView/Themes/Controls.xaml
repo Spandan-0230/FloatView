@@ -316,4 +316,56 @@
         </Setter>
     </Style>
 
+    <!-- ============ Compact check box (PiP overlay) ============ -->
+    <Style x:Key="CompactCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontUi}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="Box"
+                                Width="14"
+                                Height="14"
+                                CornerRadius="4"
+                                BorderBrush="{StaticResource BrushBorderStrong}"
+                                BorderThickness="1"
+                                Background="Transparent"
+                                VerticalAlignment="Center">
+                            <TextBlock x:Name="Check"
+                                       Text="&#xE73E;"
+                                       FontFamily="{StaticResource FontIcon}"
+                                       FontSize="8"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
+                        </Border>
+                        <ContentPresenter Grid.Column="1"
+                                          Margin="7,0,0,0"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource BrushAccent}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushAccent}" />
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource BrushAccent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>
